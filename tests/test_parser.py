@@ -7,7 +7,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from public_monitor import find_matches, parse_public_page  # noqa: E402
+from public_monitor import (  # noqa: E402
+    find_matches,
+    parse_ai_analysis,
+    parse_args,
+    parse_public_page,
+)
 
 
 FIXTURE = """
@@ -42,6 +47,41 @@ class ParserTests(unittest.TestCase):
         )
         self.assertEqual(result.keywords, ("hisobot",))
         self.assertEqual(result.companies, ("UZMK",))
+
+    def test_once_argument(self) -> None:
+        original = sys.argv
+        try:
+            sys.argv = ["public_monitor.py", "--once"]
+            self.assertTrue(parse_args().once)
+        finally:
+            sys.argv = original
+
+    def test_parse_ai_analysis(self) -> None:
+        result = parse_ai_analysis(
+            """```json
+            {
+              "relevant": true,
+              "importance": 87,
+              "sentiment": "Ijobiy",
+              "company_or_code": "UZMK",
+              "event": "Yillik hisobot",
+              "summary": "Daromad oshgan.",
+              "market_impact": "Ijobiy ta’sir qilishi mumkin.",
+              "risks": "Pul oqimini tekshirish kerak."
+            }
+            ```"""
+        )
+        self.assertTrue(result.relevant)
+        self.assertEqual(result.importance, 87)
+        self.assertEqual(result.company_or_code, "UZMK")
+
+    def test_digest_argument(self) -> None:
+        original = sys.argv
+        try:
+            sys.argv = ["public_monitor.py", "--digest-days", "3"]
+            self.assertEqual(parse_args().digest_days, 3)
+        finally:
+            sys.argv = original
 
 
 if __name__ == "__main__":

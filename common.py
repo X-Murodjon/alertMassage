@@ -33,12 +33,19 @@ def load_bot_settings(require_chat_id: bool = True) -> dict[str, str | int | boo
 
     value = os.getenv("ALERT_ALL_DOCUMENTS", "true").strip().casefold()
     alert_all_documents = value in {"1", "true", "yes", "ha"}
+    ai_value = os.getenv("AI_ENABLED", "true").strip().casefold()
+    ai_enabled = ai_value in {"1", "true", "yes", "ha"}
 
     return {
         "bot_token": os.environ["BOT_TOKEN"].strip(),
         "alert_chat_id": os.getenv("ALERT_CHAT_ID", "").strip(),
         "poll_seconds": poll_seconds,
         "alert_all_documents": alert_all_documents,
+        "ai_enabled": ai_enabled,
+        "gemini_api_key": os.getenv("GEMINI_API_KEY", "").strip(),
+        "gemini_model": os.getenv(
+            "GEMINI_MODEL", "gemini-3.5-flash-lite"
+        ).strip(),
     }
 
 
