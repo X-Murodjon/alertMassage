@@ -1,0 +1,5 @@
+# Kuzatiladigan kompaniya nomi yoki birja kodini alohida qatorga yozing.
+# Misol:
+# UZMK
+# QZSM
+# Uzmetkombinat
