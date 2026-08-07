@@ -34,6 +34,9 @@ jobs:
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           ALERT_CHAT_ID: ${{ secrets.ALERT_CHAT_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: "gemini-3.5-flash-lite"
+          AI_ENABLED: "true"
           ALERT_ALL_DOCUMENTS: "true"
         run: python public_monitor.py --once
 
