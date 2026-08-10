@@ -95,7 +95,7 @@ class ParserTests(unittest.TestCase):
             """```json
             {
               "relevant": true,
-              "importance": 87,
+              "importance": 8,
               "sentiment": "Ijobiy",
               "company_or_code": "UZMK",
               "event": "Yillik hisobot",
@@ -106,8 +106,16 @@ class ParserTests(unittest.TestCase):
             ```"""
         )
         self.assertTrue(result.relevant)
-        self.assertEqual(result.importance, 87)
+        self.assertEqual(result.importance, 8)
         self.assertEqual(result.company_or_code, "UZMK")
+
+    def test_importance_above_ten_is_clamped(self) -> None:
+        result = parse_ai_analysis('{"importance": 15}')
+        self.assertEqual(result.importance, 10)
+
+    def test_importance_below_one_is_clamped(self) -> None:
+        result = parse_ai_analysis('{"importance": 0}')
+        self.assertEqual(result.importance, 1)
 
     def test_digest_argument(self) -> None:
         original = sys.argv

@@ -160,7 +160,7 @@ def parse_ai_analysis(raw_text: str) -> AiAnalysis:
         cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
         cleaned = re.sub(r"\s*```$", "", cleaned)
     data = json.loads(cleaned)
-    importance = max(0, min(100, int(data.get("importance", 0))))
+    importance = max(1, min(10, int(data.get("importance", 1))))
     relevant_value = data.get("relevant", False)
     if isinstance(relevant_value, str):
         relevant = relevant_value.strip().casefold() in {"true", "1", "yes", "ha"}
@@ -258,12 +258,12 @@ async def send_post_alert(
     if analysis:
         lines.extend(
             [
-                f"⭐ Muhimlik: <b>{analysis.importance}/100</b>",
-                f"📈 Ta’siri: <b>{html.escape(analysis.sentiment)}</b>",
                 f"🏢 Kompaniya/kod: {html.escape(analysis.company_or_code)}",
                 f"📰 Voqea: {html.escape(analysis.event)}",
+                f"📈 Ta’siri: <b>{html.escape(analysis.sentiment)}</b>",
                 "\n<b>AI xulosasi:</b>\n"
                 + html.escape(shortened(analysis.summary, 750)),
+                f"\n🎯 Gemini bahosi: <b>{analysis.importance}/10</b>",
                 "\n<b>Bozorga ehtimoliy ta’siri:</b>\n"
                 + html.escape(shortened(analysis.market_impact, 550)),
                 "\n<b>Xavf va tekshiriladigan jihatlar:</b>\n"
@@ -286,7 +286,7 @@ async def send_post_alert(
     if post.file_names:
         lines.append("📎 Fayl: " + html.escape(", ".join(post.file_names)))
     lines.append(f'\n<a href="{html.escape(post.post_url)}">Asl postni ochish</a>')
-    lines.append("\n<i>AI xulosasi investitsiya tavsiyasi emas.</i>")
+    lines.append("\n⚠️ <i>AI xulosasi investitsiya tavsiyasi emas.</i>")
 
     await send_bot_message(http, bot_token, chat_id, "\n".join(lines))
 
@@ -436,10 +436,17 @@ Topilgan kalit so‘zlar: {", ".join(result.keywords) or "yo‘q"}
 Topilgan kompaniyalar/kodlar: {", ".join(result.companies) or "yo‘q"}
 Havola: {post.post_url}
 
+"importance" maydonida faqat 1 dan 10 gacha butun son qaytaring:
+- 1–3: ahamiyati past;
+- 4–6: o‘rtacha;
+- 7–8: muhim;
+- 9–10: juda muhim va tez ko‘rib chiqish kerak.
+Bu maydonda 0, 100 yoki 10 dan katta sonni hech qachon qaytarmang.
+
 Faqat quyidagi JSON formatida javob bering:
 {{
   "relevant": true,
-  "importance": 0,
+  "importance": 1,
   "sentiment": "Ijobiy, Salbiy yoki Neytral",
   "company_or_code": "kompaniya yoki birja kodi",
   "event": "qisqa voqea nomi",
