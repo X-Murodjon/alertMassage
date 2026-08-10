@@ -30,6 +30,8 @@ USER_AGENT = (
     "Chrome/150.0.0.0 Safari/537.36"
 )
 IMAGE_URL_PATTERN = re.compile(r"background-image\s*:\s*url\(['\"]?([^'\")]+)")
+APOSTROPHE_PATTERN = re.compile(r"['’‘ʻ`]")
+WHITESPACE_PATTERN = re.compile(r"\s+")
 MAX_MEDIA_BYTES = 15 * 1024 * 1024
 MAX_DIGEST_POSTS = 150
 
@@ -135,10 +137,20 @@ def parse_public_page(channel: str, page_html: str) -> list[PublicPost]:
     return sorted(posts, key=lambda item: item.message_id)
 
 
+def normalize_search_text(value: str) -> str:
+    normalized = value.casefold()
+    normalized = APOSTROPHE_PATTERN.sub("'", normalized)
+    return WHITESPACE_PATTERN.sub(" ", normalized).strip()
+
+
 def find_matches(text: str, keywords: list[str], companies: list[str]) -> MatchResult:
-    folded = text.casefold()
-    matched_keywords = tuple(item for item in keywords if item.casefold() in folded)
-    matched_companies = tuple(item for item in companies if item.casefold() in folded)
+    normalized_text = normalize_search_text(text)
+    matched_keywords = tuple(
+        item for item in keywords if normalize_search_text(item) in normalized_text
+    )
+    matched_companies = tuple(
+        item for item in companies if normalize_search_text(item) in normalized_text
+    )
     return MatchResult(matched_keywords, matched_companies)
 
 

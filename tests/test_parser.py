@@ -7,6 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from common import read_config_lines  # noqa: E402
 from public_monitor import (  # noqa: E402
     find_matches,
     parse_ai_analysis,
@@ -28,6 +29,8 @@ FIXTURE = """
 </div>
 """
 
+COMPANIES = read_config_lines("companies.txt")
+
 
 class ParserTests(unittest.TestCase):
     def test_parse_public_post(self) -> None:
@@ -47,6 +50,37 @@ class ParserTests(unittest.TestCase):
         )
         self.assertEqual(result.keywords, ("hisobot",))
         self.assertEqual(result.companies, ("UZMK",))
+
+    def test_company_match_normalizes_apostrophes(self) -> None:
+        for apostrophe in ("'", "’", "‘", "ʻ", "`"):
+            with self.subTest(apostrophe=apostrophe):
+                result = find_matches(
+                    f"O{apostrophe}zRTXB bo‘yicha yangilik", [], COMPANIES
+                )
+                self.assertIn("O'zRTXB", result.companies)
+
+    def test_company_match_normalizes_whitespace(self) -> None:
+        result = find_matches(
+            "O‘zbekiston   respublika\n tovar-xom ashyo birjasi AJ",
+            [],
+            COMPANIES,
+        )
+        self.assertIn(
+            "O'zbekiston respublika tovar-xom ashyo birjasi AJ",
+            result.companies,
+        )
+
+    def test_urts_ticker_matches(self) -> None:
+        result = find_matches("URTS aksiyalari bo‘yicha xabar", [], COMPANIES)
+        self.assertIn("URTS", result.companies)
+
+    def test_uzex_ticker_matches(self) -> None:
+        result = find_matches("UZEX savdo natijalarini e’lon qildi", [], COMPANIES)
+        self.assertIn("UZEX", result.companies)
+
+    def test_russian_company_name_matches(self) -> None:
+        result = find_matches("Новости компании УзРТСБ", [], COMPANIES)
+        self.assertIn("УзРТСБ", result.companies)
 
     def test_once_argument(self) -> None:
         original = sys.argv
